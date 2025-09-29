@@ -1,9 +1,11 @@
 package com.java.library.service;
 
 import com.java.library.DTO.BookDTO;
+import com.java.library.DTO.BookSummaryDTO;
 import com.java.library.DTO.ExemplarDTO;
-import com.java.library.entity.Book;
+import com.java.library.DTO.LoanDTO;
 import com.java.library.entity.Exemplar;
+import com.java.library.exceptions.custom.ExemplarNotAvailableException;
 import com.java.library.mapper.dozer.ObjectMapper;
 import com.java.library.repository.BookRepository;
 import com.java.library.repository.ExemplarRepository;
@@ -11,6 +13,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -71,5 +75,25 @@ public class ExemplarService {
 
     public List<ExemplarDTO> findAll() {
         return ObjectMapper.parseListObject(repository.findAll(), ExemplarDTO.class);
+    }
+
+    public LoanDTO getLoan(Long id) {
+        var exemplar = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Exemplar not found!"));
+
+        if (!exemplar.isAvailable())
+            throw new ExemplarNotAvailableException("Exemplar not available to loan");
+
+        exemplar.setAvailable(false);
+        repository.save(exemplar);
+
+        var loan = new LoanDTO();
+        loan.setRental(LocalDate.now());
+        loan.setLimit(loan.getRental().plusDays(7));
+        loan.setItemNumber(exemplar.getItemNumber());
+        loan.setBook(ObjectMapper
+                .parseObject(exemplar.getBook(), BookSummaryDTO.class));
+
+        return loan;
     }
 }

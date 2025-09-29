@@ -1,6 +1,7 @@
 package com.java.library.controller;
 
 import com.java.library.DTO.ExemplarDTO;
+import com.java.library.DTO.LoanDTO;
 import com.java.library.service.ExemplarService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -51,5 +52,11 @@ public class ExemplarController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ExemplarDTO update(@RequestBody ExemplarDTO dto) {
         return service.update(dto);
+    }
+
+    @GetMapping(value = "/loan/{id}",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public LoanDTO getLoan(@PathVariable Long id) {
+        return service.getLoan(id);
     }
 }
